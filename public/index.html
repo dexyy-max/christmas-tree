@@ -7,8 +7,8 @@
     <style>
       :root {
         --bg: #060b17;
-        --teal: #6ee7f1;
-        --light: #e6fbff;
+        --teal: #ff7ab8; /* 使用粉色系作为主色 */
+        --light: #ffe6f3;
         --gold: #ffd166;
         --overlay: rgba(0,0,0,.55);
       }
@@ -21,7 +21,7 @@
       }
       #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
       .credit { position: fixed; left: 12px; bottom: 10px; opacity: .7; font-size: 12px; user-select: none; }
-      .star-glow { position: absolute; left: 50%; transform: translateX(-50%); top: 12vh; width: 14vmin; height: 14vmin; pointer-events: none; filter: blur(6px); background: radial-gradient(circle, #8be9ff 0%, rgba(139,233,255,.4) 35%, rgba(139,233,255,.15) 55%, transparent 70%); mix-blend-mode: screen; }
+      .star-glow { position: absolute; left: 50%; transform: translateX(-50%); top: 12vh; width: 14vmin; height: 14vmin; pointer-events: none; filter: blur(6px); background: radial-gradient(circle, #ff9ad5 0%, rgba(255,154,213,.4) 35%, rgba(255,154,213,.15) 55%, transparent 70%); mix-blend-mode: screen; }
 
       /* Modal */
       .modal-mask { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
@@ -30,8 +30,8 @@
       .modal main { padding: 18px; font-size: 16px; line-height: 1.6; }
       .modal footer { display: flex; gap: 10px; justify-content: flex-end; padding: 12px 18px 16px; }
       .btn { appearance: none; border: 0; padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-      .btn-primary { background: linear-gradient(135deg, #22d3ee, #0ea5e9); color: #001018; }
-      .btn-ghost { background: transparent; color: #bfe9ff; }
+      .btn-primary { background: linear-gradient(135deg, #ff7ab8, #ff3fa6); color: #210012; }
+      .btn-ghost { background: transparent; color: #ffd1e8; }
 
       /* mobile safe-area for bottom text */
       @supports (padding: max(0px)) {
@@ -104,7 +104,7 @@
               x: centerX + Math.cos(angle) * radius,
               y,
               size: Math.random() * 1.9 + 0.8,
-              hue: 170 + Math.random() * 40, // teal-ish
+              hue: 330 + Math.random() * 30, // pink-ish
               tw: Math.random() * 2 * Math.PI,
             });
           }
@@ -136,7 +136,7 @@
 
         // tree glow base
         const grd = ctx.createRadialGradient(centerX, baseY - height(), 20, centerX, baseY - height() - 10, 240);
-        grd.addColorStop(0, 'rgba(142, 244, 255, 0.25)');
+        grd.addColorStop(0, 'rgba(255, 170, 210, 0.25)');
         grd.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = grd;
         ctx.beginPath(); ctx.arc(centerX, baseY - height(), 240, 0, Math.PI*2); ctx.fill();
@@ -164,7 +164,7 @@
 
       // --- Popups ---
       const wishes = [
-        '某某，圣诞节开心呀！愿你此刻被温柔环绕 ✨',
+        '田梦莹宝宝，圣诞节开心呀！愿你此刻被温柔环绕 ✨',
         '好好吃饭，照顾好自己，能量满满！',
         '天天开心，所念皆如愿，所行皆坦途。',
         '天气冷了记得添衣服，别感冒啦～',

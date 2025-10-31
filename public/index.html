@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>圣诞快乐 ✨</title>
+    <style>
+      :root {
+        --bg: #060b17;
+        --teal: #6ee7f1;
+        --light: #e6fbff;
+        --gold: #ffd166;
+        --overlay: rgba(0,0,0,.55);
+      }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 50% -100px, #1a2a44 0%, var(--bg) 60%);
+        color: #fff; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;
+        overflow: hidden;
+      }
+      #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .credit { position: fixed; left: 12px; bottom: 10px; opacity: .7; font-size: 12px; user-select: none; }
+      .star-glow { position: absolute; left: 50%; transform: translateX(-50%); top: 12vh; width: 14vmin; height: 14vmin; pointer-events: none; filter: blur(6px); background: radial-gradient(circle, #8be9ff 0%, rgba(139,233,255,.4) 35%, rgba(139,233,255,.15) 55%, transparent 70%); mix-blend-mode: screen; }
+
+      /* Modal */
+      .modal-mask { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+      .modal { width: min(92vw, 480px); background: rgba(17,25,40,.85); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter: blur(8px); }
+      .modal header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.06); font-weight: 600; }
+      .modal main { padding: 18px; font-size: 16px; line-height: 1.6; }
+      .modal footer { display: flex; gap: 10px; justify-content: flex-end; padding: 12px 18px 16px; }
+      .btn { appearance: none; border: 0; padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+      .btn-primary { background: linear-gradient(135deg, #22d3ee, #0ea5e9); color: #001018; }
+      .btn-ghost { background: transparent; color: #bfe9ff; }
+
+      /* mobile safe-area for bottom text */
+      @supports (padding: max(0px)) {
+        .credit { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+    <div class="star-glow" aria-hidden="true"></div>
+    <div class="credit">愿你被世界温柔以待 · Merry Christmas</div>
+
+    <div id="modalMask" class="modal-mask" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal">
+        <header id="modalTitle">圣诞祝福</header>
+        <main id="modalContent"></main>
+        <footer>
+          <button id="btnClose" class="btn btn-ghost">稍后再看</button>
+          <button id="btnNext" class="btn btn-primary">下一条</button>
+        </footer>
+      </div>
+    </div>
+
+    <script>
+      // --- Canvas: snow + tree particles ---
+      const canvas = document.getElementById('stage');
+      const ctx = canvas.getContext('2d');
+      const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let W, H, centerX, baseY;
+
+      function resize() {
+        W = canvas.clientWidth = window.innerWidth;
+        H = canvas.clientHeight = window.innerHeight;
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        centerX = W / 2;
+        baseY = H * 0.78;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Snowflakes
+      const snow = [];
+      for (let i = 0; i < 220; i++) {
+        snow.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: Math.random() * 2 + 0.6,
+          spd: Math.random() * 0.6 + 0.2,
+          drift: (Math.random() * 0.6 + 0.2) * (Math.random() < 0.5 ? -1 : 1),
+        });
+      }
+
+      // Tree lights particles
+      const lights = [];
+      const height = () => Math.min(540, window.innerHeight * 0.6);
+      function generateTree() {
+        lights.length = 0;
+        const treeH = height();
+        const levels = 180; // density
+        for (let i = 0; i < levels; i++) {
+          const t = i / (levels - 1); // 0..1 from top to bottom
+          const y = baseY - t * treeH;
+          const radius = (1 - Math.pow(t, 1.2)) * (treeH * 0.25) + 18;
+          const count = Math.floor(10 + radius / 3);
+          for (let k = 0; k < count; k++) {
+            const angle = (k / count) * Math.PI * 2 + t * 10; // spiral twist
+            lights.push({
+              x: centerX + Math.cos(angle) * radius,
+              y,
+              size: Math.random() * 1.9 + 0.8,
+              hue: 170 + Math.random() * 40, // teal-ish
+              tw: Math.random() * 2 * Math.PI,
+            });
+          }
+        }
+      }
+      generateTree();
+      window.addEventListener('resize', generateTree);
+
+      let startTime = performance.now();
+      function draw() {
+        const t = (performance.now() - startTime) / 1000;
+        // background
+        ctx.clearRect(0,0,W,H);
+
+        // snowfall
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        for (const s of snow) {
+          s.y += s.spd;
+          s.x += Math.sin(t * 0.6 + s.y * 0.01) * 0.3 + s.drift * 0.015;
+          if (s.y > H + 5) { s.y = -10; s.x = Math.random() * W; }
+          if (s.x > W + 5) s.x = -5; else if (s.x < -5) s.x = W + 5;
+          ctx.globalAlpha = 0.5 + Math.sin((s.y + t * 40) * 0.02) * 0.4;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // tree glow base
+        const grd = ctx.createRadialGradient(centerX, baseY - height(), 20, centerX, baseY - height() - 10, 240);
+        grd.addColorStop(0, 'rgba(142, 244, 255, 0.25)');
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(centerX, baseY - height(), 240, 0, Math.PI*2); ctx.fill();
+
+        // tree lights
+        for (const p of lights) {
+          const twinkle = 0.55 + 0.45 * Math.sin(p.tw + t * 4);
+          const size = p.size * (0.6 + twinkle * 0.8);
+          ctx.fillStyle = `hsl(${p.hue}, 100%, ${65 + twinkle * 20}%)`;
+          ctx.shadowColor = `hsla(${p.hue}, 100%, 70%, ${0.6 + twinkle * 0.3})`;
+          ctx.shadowBlur = 8 + twinkle * 10;
+          ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI*2); ctx.fill();
+        }
+
+        // trunk
+        ctx.save();
+        ctx.fillStyle = '#3b2f2f';
+        const tw = 20; const th = Math.max(22, height()*0.08);
+        ctx.fillRect(centerX - tw/2, baseY, tw, th);
+        ctx.restore();
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      // --- Popups ---
+      const wishes = [
+        '某某，圣诞节开心呀！愿你此刻被温柔环绕 ✨',
+        '好好吃饭，照顾好自己，能量满满！',
+        '天天开心，所念皆如愿，所行皆坦途。',
+        '天气冷了记得添衣服，别感冒啦～',
+      ];
+      const mask = document.getElementById('modalMask');
+      const title = document.getElementById('modalTitle');
+      const content = document.getElementById('modalContent');
+      const btnNext = document.getElementById('btnNext');
+      const btnClose = document.getElementById('btnClose');
+      let idx = 0;
+
+      function showModal(text){
+        content.textContent = text;
+        mask.style.display = 'flex';
+        mask.setAttribute('aria-hidden', 'false');
+      }
+      function hideModal(){
+        mask.style.display = 'none';
+        mask.setAttribute('aria-hidden', 'true');
+      }
+
+      btnNext.addEventListener('click', () => {
+        idx++;
+        if (idx < wishes.length) {
+          showModal(wishes[idx]);
+        } else {
+          hideModal();
+        }
+      });
+      btnClose.addEventListener('click', hideModal);
+      mask.addEventListener('click', (e)=>{ if(e.target === mask) hideModal(); });
+
+      // after tree appears for a while, show first popup
+      setTimeout(() => showModal(wishes[0]), 2600);
+    </script>
+  </body>
+  </html>
+
+
